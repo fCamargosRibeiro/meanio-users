@@ -142,15 +142,8 @@ angular.module('mean.users')
     }
   ])
   .controller('ForgotPasswordCtrl', ['MeanUser', '$rootScope', 'RestApi', '$location',
-    function ($rootScope, MeanUser, RestApi, $location) {
+    function (MeanUser, $rootScope, RestApi, $location) {
       var vm = this;
-
-      RestApi.getRequestServerIsAvailable()
-        .then(function (response) {
-        })
-        .catch(function (response) {
-          $location.path('/');
-        });
 
       vm.user = {};
       vm.registerForm = MeanUser.registerForm = false;

@@ -252,20 +252,13 @@ angular.module('mean.users').factory('MeanUser', ['$rootScope', '$http', '$locat
     };
 
     MeanUserKlass.prototype.forgotpassword = function (user) {
-      RestApi.getRequestServerIsAvailable()
+      $http.post('/api/forgot-password', {
+        text: user.email
+      })
         .then(function (response) {
-          $http.post('/api/forgot-password', {
-            text: user.email
-          })
-            .then(function (response) {
-              $rootScope.$emit('forgotmailsent', response.data);
-            })
-            .catch(this.onIdFail.bind(this));
+          $rootScope.$emit('forgotmailsent', response.data);
         })
-        .catch(function (response) {
-          $location.path('/');
-        });
-
+        .catch(this.onIdFail.bind(this));
     };
 
     MeanUserKlass.prototype.logout = function () {
