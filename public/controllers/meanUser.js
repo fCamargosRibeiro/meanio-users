@@ -28,7 +28,7 @@ angular.module('mean.users')
     function ($rootScope, MeanUser, RestApi, $location) {
       var vm = this;
 
-       vm.gRecaptchaResponse = '';
+      vm.gRecaptchaResponse = '';
 
       RestApi.getRequestServerIsAvailable()
         .then(function (response) {
@@ -73,6 +73,8 @@ angular.module('mean.users')
     function ($rootScope, MeanUser, RestApi, $location) {
       var vm = this;
 
+      vm.gRecaptchaResponse = '';
+
       RestApi.getRequestServerIsAvailable()
         .then(function (response) {
         })
@@ -108,7 +110,11 @@ angular.module('mean.users')
 
       // Register the register() function
       vm.register = function () {
-        MeanUser.register(this.user);
+        if (vm.gRecaptchaResponse.length > 1) {
+          MeanUser.register(this.user);
+        } else {
+          vm.msgError = "Passe pelo CAPTCHA para logar.";
+        }
       };
 
       $rootScope.$on('registerfailed', function () {
