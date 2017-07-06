@@ -3,20 +3,20 @@
 /**
  * Module dependencies.
  */
-var mongoose  = require('mongoose'),
-  Schema    = mongoose.Schema,
-  crypto    = require('crypto'),
-  _   = require('lodash');
+var mongoose = require('mongoose'),
+  Schema = mongoose.Schema,
+  crypto = require('crypto'),
+  _ = require('lodash');
 
 /**
  * Validations
  */
-var validatePresenceOf = function(value) {
+var validatePresenceOf = function (value) {
   // If you are authenticating by any of the oauth strategies, don't validate.
   return (this.provider && this.provider !== 'local') || (value && value.length);
 };
 
-var validateUniqueEmail = function(value, callback) {
+var validateUniqueEmail = function (value, callback) {
   var User = mongoose.model('User');
   User.find({
     $and: [{
@@ -26,12 +26,12 @@ var validateUniqueEmail = function(value, callback) {
         $ne: this._id
       }
     }]
-  }, function(err, user) {
+  }, function (err, user) {
     callback(err || user.length === 0);
   });
 };
 
-var validateUniqueLegalIdentifier = function(value, callback) {
+var validateUniqueLegalIdentifier = function (value, callback) {
   var User = mongoose.model('User');
   User.find({
     $and: [{
@@ -41,7 +41,7 @@ var validateUniqueLegalIdentifier = function(value, callback) {
         $ne: this._id
       }
     }]
-  }, function(err, user) {
+  }, function (err, user) {
     callback(err || user.length === 0);
   });
 };
@@ -49,7 +49,7 @@ var validateUniqueLegalIdentifier = function(value, callback) {
 /**
  * Getter
  */
-var escapeProperty = function(value) {
+var escapeProperty = function (value) {
   return _.escape(value);
 };
 
@@ -126,18 +126,18 @@ var UserSchema = new Schema({
 /**
  * Virtuals
  */
-UserSchema.virtual('password').set(function(password) {
+UserSchema.virtual('password').set(function (password) {
   this._password = password;
   this.salt = this.makeSalt();
   this.hashed_password = this.hashPassword(password);
-}).get(function() {
+}).get(function () {
   return this._password;
 });
 
 /**
  * Pre-save hook
  */
-UserSchema.pre('save', function(next) {
+UserSchema.pre('save', function (next) {
   if (this.isNew && this.provider === 'local' && this.password && !this.password.length)
     return next(new Error('Senha inválida'));
   next();
@@ -154,9 +154,20 @@ UserSchema.pre('save', function(next) {
  * @return {Boolean}
  * @api public
  */
-UserSchema.methods.hasRole = function(role) {
+UserSchema.methods.hasRole = function (role) {
   var roles = this.roles;
   return roles.indexOf('admin') !== -1 || roles.indexOf(role) !== -1;
+};
+
+/**
+* Authenticate - check if the passwords are the same
+*
+* @param {String} currentText
+* @return {Boolean}
+* @api public
+*/
+UserSchema.methods.currentHashPassword = function (currentText) {
+  return this.hashPassword(currentText);
 };
 
 /**
@@ -165,7 +176,7 @@ UserSchema.methods.hasRole = function(role) {
  * @return {Boolean}
  * @api public
  */
-UserSchema.methods.isAdmin = function() {
+UserSchema.methods.isAdmin = function () {
   return this.roles.indexOf('admin') !== -1;
 };
 
@@ -176,7 +187,7 @@ UserSchema.methods.isAdmin = function() {
  * @return {Boolean}
  * @api public
  */
-UserSchema.methods.authenticate = function(plainText) {
+UserSchema.methods.authenticate = function (plainText) {
   return this.hashPassword(plainText) === this.hashed_password;
 };
 
@@ -186,7 +197,7 @@ UserSchema.methods.authenticate = function(plainText) {
  * @return {String}
  * @api public
  */
-UserSchema.methods.makeSalt = function() {
+UserSchema.methods.makeSalt = function () {
   return crypto.randomBytes(16).toString('base64');
 };
 
@@ -197,7 +208,7 @@ UserSchema.methods.makeSalt = function() {
  * @return {String}
  * @api public
  */
-UserSchema.methods.hashPassword = function(password) {
+UserSchema.methods.hashPassword = function (password) {
   if (!password || !this.salt) return '';
   var salt = new Buffer(this.salt, 'base64');
   return crypto.pbkdf2Sync(password, salt, 10000, 64).toString('base64');
@@ -208,7 +219,7 @@ UserSchema.methods.hashPassword = function(password) {
  *
  * @returns {*|Array|Binary|Object}
  */
-UserSchema.methods.toJSON = function() {
+UserSchema.methods.toJSON = function () {
   var obj = this.toObject();
   delete obj.hashed_password;
   delete obj.salt;

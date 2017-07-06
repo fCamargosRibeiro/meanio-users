@@ -226,8 +226,10 @@ angular.module('mean.users').factory('MeanUser', ['$rootScope', '$http', '$locat
         });
     };
 
-    MeanUserKlass.prototype.changepassword = function (user) {
+    MeanUserKlass.prototype.changepassword = function (user, id) {
       $http.post('/api/change', {
+        id: id,
+        currentPassword: user.currentPassword,
         password: user.password,
         confirmPassword: user.confirmPassword
       })

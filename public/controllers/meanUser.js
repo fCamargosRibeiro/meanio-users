@@ -183,17 +183,10 @@ angular.module('mean.users')
     function (MeanUser, $rootScope, RestApi, $location) {
       var vm = this;
 
-      RestApi.getRequestServerIsAvailable()
-        .then(function (response) {
-        })
-        .catch(function (response) {
-          $location.path('/');
-        });
-
       vm.user = {};
       vm.registerForm = MeanUser.registerForm = false;
       vm.changepassword = function () {
-        MeanUser.changepassword(this.user);
+        MeanUser.changepassword(this.user, MeanUser.user._id);
       };
 
       $rootScope.$on('registerfailed', function () {

@@ -301,34 +301,48 @@ module.exports = function (MeanUser) {
 
         changepassword: function (req, res, next) {
             var user = req.user;
-            req.assert('password', 'Senha deve ter entre 8-20 caracteres').len(8, 20);
-            req.assert('confirmPassword', 'Senhas não são iguais').equals(req.body.password);
-            var errors = req.validationErrors();
-            if (errors) {
-                return res.status(400).send(errors);
-            }
-            user.password = req.body.password;
-            user.resetPasswordToken = undefined;
-            user.resetPasswordExpires = undefined;
-            user.save(function (err) {
+            User.findById(req.body.id)
+                .exec(function (err, currentUser) {
+                    if (err) {
+                        return next(err);
+                    } else {
+                        if (currentUser.authenticate(req.body.currentPassword)) {
+                            req.assert('password', 'Senha deve ter entre 8-20 caracteres').len(8, 20);
+                            req.assert('confirmPassword', 'Senhas não são iguais').equals(req.body.password);
+                            var errors = req.validationErrors();
+                            if (errors) {
+                                return res.status(400).send(errors);
+                            }
+                            user.password = req.body.password;
+                            user.resetPasswordToken = undefined;
+                            user.resetPasswordExpires = undefined;
+                            user.save(function (err) {
 
-                MeanUser.events.publish({
-                    action: 'change_password',
-                    user: {
-                        name: user.name
+                                MeanUser.events.publish({
+                                    action: 'change_password',
+                                    user: {
+                                        name: user.name
+                                    }
+                                });
+
+                                var payload = user;
+                                payload.redirect = req.body.redirect;
+                                var escaped = JSON.stringify(payload);
+                                escaped = encodeURI(escaped);
+                                var token = jwt.sign(escaped, config.secret);
+                                res.status(200).json({
+                                    token: token,
+                                    redirect: config.strategies.landingPage
+                                });
+                            });
+                        } else {
+                            req.assert(currentUser.currentHashPassword(req.body.currentPassword), 'Senha atual precisa ser igual a senha cadastrada. Caso não lembre, deslogue e tente a recuperação de senha.').equals(currentUser.hashed_password);
+                            var errors = req.validationErrors();
+                            return res.status(400).send(errors);
+                        }
                     }
-                });
+                })
 
-                var payload = user;
-                payload.redirect = req.body.redirect;
-                var escaped = JSON.stringify(payload);
-                escaped = encodeURI(escaped);
-                var token = jwt.sign(escaped, config.secret);
-                res.status(200).json({
-                    token: token,
-                    redirect: config.strategies.landingPage
-                });
-            });
         },
 
         /**
